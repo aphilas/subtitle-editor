@@ -11,5 +11,6 @@ The user can
 - [ ] control playback (play, pause)
 - [ ] set time window for annotation
 - [ ] input text corresponding to active time window
+- [ ] preview existing annotation
 - [ ] correct out of sync text during playback
 - [ ] save the annotation in an appropriate format
