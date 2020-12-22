@@ -9,6 +9,20 @@ const rwd = document.querySelector('.stf')
 const increase_speed = document.querySelector('.incs')
 const decrease_speed = document.querySelector('.decs')
 
+const vid = document.querySelector('.selected_vid')
+vid.addEventListener('change', handleFiles, false)
+
+function handleFiles(event) {
+  const file = vid.files[0]
+
+  const objectURL = window.URL.createObjectURL(file)
+  const sourceEl = document.createElement('source')
+  
+  sourceEl.setAttribute('src', objectURL)
+  sourceEl.setAttribute('type', file.type)
+  media.appendChild(sourceEl)
+}
+
 rwd.addEventListener('click', windForward)
 fwd.addEventListener('click', windBackward)
 
@@ -181,13 +195,16 @@ function toggleMute(e) {
 
 
 // caption groups
+let caption_groups = []
 
 document.execCommand("defaultParagraphSeparator", false, "br")
 
 const editors = document.querySelector('.editors')
 
 editors.appendChild(CreateEditor());
+caption_groups[0] = { start: media.currentTime }
 
+/**TODO: Display start and end times alognside caption group editor */
 function CreateEditor() {
   const editor = document.createElement('div')
   editor.contentEditable = 'true'
@@ -197,19 +214,39 @@ function CreateEditor() {
   return editor
 }
 
+/**
+ * @author - migs_boson
+ */
+function transform([a,b],[_a,_b],x) {
+  return _a * Math.exp(Math.log(_b / _a) * ((x - a)/(b - a)))
+}
+
+const captionDuration = n => transform([1,60],[1,5],n)
+
 function handleEnter(event) {
   if (event.key == 'Enter') {
     if (event.shiftKey) {
       document.execCommand('insertHTML',false,'<br>')
     } else {
       event.preventDefault()
+
+      const previous = caption_groups[caption_groups.length - 1]
+      const text = event.target.textContent
+
+      previous.text = text
+      previous.stop = previous.start + captionDuration(text.length)
+
       const editor = CreateEditor()
       editors.appendChild(editor)
+
+      caption_groups.push({ start: media.currentTime })
+
       editor.focus()
     }
   }
 }
 
+/**TODO: Remove caption group from array after deleting editor */
 function handleDelete(event) {
   if (event.key == 'Backspace'){
     if( event.target.textContent == '') {
@@ -242,4 +279,4 @@ function setCursor(target, position) {
   selection.addRange(range)
 
   target.focus()
-} 
+}
