@@ -1,0 +1,266 @@
+<template>
+
+  <!-- TODO:
+    * add sources slot
+    * support attributes/properties
+  -->
+
+  <div class="video-container">
+    <video class="video">
+      <!-- <slot> -->
+        <!-- fallback content -->
+        <source src="../big-buck-bunny.mp4" type="video/mp4">
+      <!-- </slot> -->
+    </video>
+
+    <div class="controls">
+      <button class="play-pause">P</button>
+      <button class="play-clip">C</button>
+
+      <button class="mute">M</button>
+      <input type="range" class="volume-slider" value="100">
+
+      <span class="timer">00:00</span>
+      <input type="range" class="progress-slider" value="0">
+      <span class="duration">00:00</span>
+
+      <button class="skip-back"><</button>
+      <button class="skip-forward">></button>
+      
+      <button class="speed-up">>></button>
+      <button class="slow-down"><<</button>
+    </div>
+  </div>
+
+  <script>
+    const containerEl = document.querySelector('video-player')
+    const shadowRoot = containerEl.shadowRoot
+
+    const sel = query => shadowRoot.querySelector(query)
+    const selAll = query => shadowRoot.querySelectorAll(query)
+    
+    const videoEl = sel('.video')
+
+    // fn args vs config?
+    const mediaControls = (media, { minSpeed = 0.25, maxSpeed = 5, clipDuration = 3000 } = {}) => {
+      const config = { minSpeed, maxSpeed, clipDuration }
+
+      return {
+        playPause() {
+          if(media.paused) {
+            media.play()
+          } else {
+            media.pause()
+          }
+        },
+
+        playClip(){
+          media.play()
+          setTimeout(_ => media.pause(), config.clipDuration)
+        },
+
+        skip(delta) {
+          media.currentTime += delta
+        },
+
+        speed(delta) {
+          const current = media.playbackRate
+          const isNegative = Math.sign(delta) == -1 ? true : false
+
+          if (!isNegative) { // speed up
+            media.playbackRate = Math.min(config.maxSpeed, current + delta)
+          } else { // slow down
+            media.playbackRate = Math.max(config.minSpeed, current + delta)
+          }
+        },
+      }
+    }
+
+    const ctrls = mediaControls(videoEl)
+
+    // play clip
+    sel('.play-clip').addEventListener('click', ctrls.playClip)
+
+    // play/pause
+    const playEl = sel('.play-pause')
+    playEl.addEventListener('click', ctrls.playPause)
+    videoEl.addEventListener('click', ctrls.playPause)
+    videoEl.addEventListener('play', _ => playEl.textContent = 'S')
+    videoEl.addEventListener('pause', _ => playEl.textContent = 'P')
+
+    // skip
+    sel('.skip-back').addEventListener('click', _ => ctrls.skip(-3))
+    sel('.skip-forward').addEventListener('click', _ => ctrls.skip(3))
+
+    // speed
+    sel('.speed-up').addEventListener('click', _ => ctrls.speed(0.5))
+    sel('.slow-down').addEventListener('click', _ => ctrls.speed(-0.5))
+    
+    // duration
+    const secondsToString = sec => new Date(sec * 1000).toISOString().substr(11, 8) // SO
+
+    videoEl.addEventListener('durationchange', _ => {
+      const seconds = parseFloat(videoEl.duration).toFixed()
+      sel('.duration').textContent = secondsToString(seconds) // set duration
+    })
+
+    // timer
+    videoEl.addEventListener('timeupdate', _ => sel('.timer').textContent = secondsToString(videoEl.currentTime))
+
+    // video scrubber
+    const progressEl = sel('.progress-slider')
+
+    progressEl.addEventListener('input', event => {
+      videoEl.currentTime = videoEl.duration * progressEl.value * 0.01
+      videoEl.play()
+    })
+
+    videoEl.addEventListener('timeupdate', _ => {
+      progressEl.value = Math.floor(videoEl.currentTime / videoEl.duration * 100)
+      progressEl.style.setProperty('--track-bg-size', `${progressEl.value}%`)
+    })
+  
+    // mute
+    const volumeState = {}
+    const volumeSlider = sel('.volume-slider')
+
+    const toggleMute = _ => {
+      const volume = videoEl.volume
+
+      if (volume == 0) { // unmute
+        videoEl.volume = volumeState.volume // restore volume
+        videoEl.dispatchEvent(new Event('volumechange'))
+      } else { // mute
+        volumeState.volume = volume // save current volume
+        videoEl.volume = 0
+        videoEl.dispatchEvent(new Event('volumechange'))
+      }
+    }
+
+    const muteEl = sel('.mute')
+    muteEl.addEventListener('click', toggleMute)
+
+    // volume
+    volumeSlider.addEventListener('input', _ => {
+      videoEl.volume = volumeSlider.value / 100
+      if (volumeSlider.value == 0) volumeState.volume = 1
+    })
+
+    videoEl.addEventListener('volumechange', _ => {
+      muteEl.textContent = videoEl.volume == 0 ? 'U' : 'M' // update icons
+
+      if ((volumeSlider.value / 100) != videoEl.volume) {
+        volumeSlider.value = videoEl.volume * 100
+        volumeSlider.dispatchEvent(new Event('input'))
+      }
+    })
+
+    // functionality for fancy sliders
+    const sliders = (_ => {
+      selAll('input[type=range]').forEach(input => {
+        input.style.setProperty('--track-bg-size', `${input.value}%`)
+        input.addEventListener('input', ({ target }) => {
+          target.style.setProperty('--track-bg-size', `${target.value}%`) // min 0, max 100
+        })
+      })
+    })()
+  </script>
+
+  <style>
+    .video {
+      max-width: 100%;
+    }
+
+    .controls {
+      padding: .5em;
+      background-color: rgba(50, 50, 50, .3);
+      transition: .5s all;
+    }
+
+    button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: bolder;
+      font-size: 1em;
+      padding: 0 .5em;
+      cursor: pointer;
+    }
+
+    .timer, .duration {
+      font-size: .75em;
+      color: white;
+    }
+
+    .progress-slider {
+      --track-bg-size: 0%;
+      width: 30em;
+    }
+
+    .volume-slider {
+      --track-bg-size: 0%;
+      width: 8em;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent; 
+    }
+
+    input[type=range]::-webkit-slider-thumb, input[type=range]::-moz-range-thumb {
+      -webkit-appearance: none;
+    }
+
+    input[type=range]:focus {
+      outline: none; 
+    }
+
+    /* thumb */
+
+    input[type=range]::-webkit-slider-thumb, input[type=range]::-moz-range-thumb {
+      height: 15px;
+      width: 15px;
+      border-radius: 50px;
+      background: #fff;
+      cursor: pointer;
+      border: none;
+      box-shadow: 1px 0px 5px 0.5px rgba(150, 150, 150, .5);
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      margin-top: -14px; 
+    }
+
+    /* track */
+
+    input[type=range]::-webkit-slider-runnable-track, input[type=range]::-moz-range-track {
+      width: 100%;
+      height: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      background: linear-gradient(#4600FF, #4600FF) no-repeat rgba(50, 50, 50, .3);
+      background-size: var(--track-bg-size) 100%;
+    }
+
+    input[type=range]:focus::-webkit-slider-runnable-track {
+      background: linear-gradient(#4600FF, #4600FF) no-repeat rgba(50, 50, 50, .3);
+      background-size: var(--track-bg-size) 100%;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track, input[type=range]::-moz-range-track {
+      background-size: var(--track-bg-size) 100%;
+    }
+
+    /* volume */
+
+    input[type=range].volume-slider::-webkit-slider-runnable-track, input[type=range]::-moz-range-track {
+      background-size: var(--track-bg-size) 100%;
+    }
+
+    input[type=range].volume-slider::-webkit-slider-runnable-track, input[type=range].volume-slider::-moz-range-track, input[type=range].volume-slider:focus::-webkit-slider-runnable-track {
+      background: linear-gradient(rgba(50, 50, 50, .6), rgba(50, 50, 50, .6)) no-repeat rgba(50, 50, 50, .3);
+      background-size: var(--track-bg-size) 100%;
+    }
+  </style>
+</template>
