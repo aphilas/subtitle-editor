@@ -1,7 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SubbEd</title>
+  
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
   <label for="video-in" class="upload-video">Upload video</label>
   <input type="file" class="video-input" accept="video/*" value="Upload Video" id="video-in">
 
+  <video-player></video-player>
 
   <div class="captions">
 
   </div>
+    
+  <script src="script.js"></script>
+  <script src="./video-player/video-player.js" type="module"></script>
+</body>
+</html>
