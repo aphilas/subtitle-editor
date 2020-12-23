@@ -6,29 +6,24 @@
   -->
 
   <div class="video-container">
-    <video class="video">
-      <!-- <slot> -->
-        <!-- fallback content -->
-        <source src="../big-buck-bunny.mp4" type="video/mp4">
-      <!-- </slot> -->
-    </video>
+    <video class="video" width="100%"></video>
 
     <div class="controls">
-      <button class="play-pause">P</button>
-      <button class="play-clip">C</button>
+      <button class="play-pause" title="(P)lay/Pau(s)e">P</button>
+      <button class="play-clip" title="Play (C)lip">C</button>
 
-      <button class="mute">M</button>
+      <button class="mute" title="(M)ute/(U)nmute">M</button>
       <input type="range" class="volume-slider" value="100">
 
       <span class="timer">00:00</span>
       <input type="range" class="progress-slider" value="0">
       <span class="duration">00:00</span>
 
-      <button class="skip-back"><</button>
-      <button class="skip-forward">></button>
+      <button class="skip-back" title="Skip back">&lt;</button>
+      <button class="skip-forward" title="Skip forward">&gt;</button>
       
-      <button class="speed-up">>></button>
-      <button class="slow-down"><<</button>
+      <button class="speed-up" title="Speed up">&gt;&gt;</button>
+      <button class="slow-down" title="Slow down">&lt;&lt;</button>
     </div>
   </div>
 
@@ -164,9 +159,21 @@
         })
       })
     })()
+
+    videoEl.addEventListener('loadedmetadata', event => {
+      sel('.controls').style.display = 'block'
+    })
   </script>
 
   <style>
+    :host {
+      display: block;
+    }
+
+    :host([hidden]) {
+      display: none;
+    }
+
     .video {
       max-width: 100%;
     }
@@ -175,6 +182,7 @@
       padding: .5em;
       background-color: rgba(50, 50, 50, .3);
       transition: .5s all;
+      display: none;
     }
 
     button {
