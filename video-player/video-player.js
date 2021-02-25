@@ -1,8 +1,4 @@
-const fetchTemplate = async (path) => {
-  const res = await fetch(path)
-  const txt = await res.text()
-  return txt
-}
+import { fetchTemplate } from '../utils.js'
 
 class VideoPlayer extends HTMLElement {
   constructor() {

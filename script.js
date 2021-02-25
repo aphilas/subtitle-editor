@@ -1,5 +1,6 @@
+import { expMap } from '../utils.js'
 
-/* video upload  */
+/** video upload  */
 
 const videoInput = document.querySelector('.video-input')
 const videoComponent = document.querySelector('video-player')
@@ -13,72 +14,56 @@ videoInput.addEventListener('change', event => {
   videoComponent.setAttribute('type', file.type)
 }, false)
 
-/* caption editors */
+/** captions */
 
+// add line break on Enter when editing caption using contenteditable
 document.execCommand('defaultParagraphSeparator', false, 'br')
 
-const captions = []
-const captionsEl = document.querySelector('.captions')
+const state = { currentId: 0, captions: {} }
+const captionsContainerEl = document.querySelector('.captions-container')
 
-const expMap = ([a, b], [_a, _b], x) => _a * Math.exp(Math.log(_b / _a) * ((x - a) / (b - a)))
+/** initial caption */
+
+const firstCaptionEl = document.createElement('caption-element')
+firstCaptionEl.dataset.id = state.currentId++;
+captionsContainerEl.appendChild(firstCaptionEl)
+
+state.captions[firstCaptionEl.dataset.id] = { start: 0, el: firstCaptionEl }
+
+/** create new caption */
+
 const captionDuration = n => expMap([1 ,60], [1, 5], n)
 
-const captionEnter = event => {
-  if (event.key == 'Enter') {
-    if (event.shiftKey) {
-      document.execCommand('insertHTML',false,'<br>')
-    } else {
-      event.preventDefault()
+document.addEventListener('caption-enter', { detail: { text, el } } => {
+  const previous = state.captions[el.dataset.id]
+  previous.text = text
+  previous.stop = previous.start + captionDuration(text.length)
 
-      const previous = captions[captions.length - 1]
-      const text = event.target.textContent
-      previous.text = text
-      previous.stop = previous.start + captionDuration(text.length)
+  const captionEl = document.createElement('caption-element')
+  captionEl.dataset.id = state.currentId++;
+  captionsContainerEl.appendChild(captionEl)
+  state.captions[captionEl.dataset.id] = { start: getVideoEl().currentTime, el: captionEl, prev: previous.el }
+  captionEl.querySelector('.caption-text').focus()
+})
 
-      const caption = createCaption()
-      captionsEl.appendChild(caption)
-      captions.push({ start: getVideoEl().currentTime })
-      caption.focus()
-    }
+document.addEventListener('caption-delete', { detail: { el } } => {
+  const prev = state.captions[el.dataset.id].prev
+  delete state.captions[el.dataset.id]
+  el.remove()
+
+  if (prev) {
+    const len = state.captions[prev.dataset.id].text.length
+    const previousCaptionTextEl = prev.querySelector('.caption-text')
+    if (len > 0) setCursor(previousCaptionTextEl, len)
+    previousCaptionTextEl.focus()
   }
-}
+})
 
-const captionDelete = event => {
-  if (event.key == 'Backspace'){
-    if( event.target.textContent == '') {
-      event.target.remove()
-
-      if (captions.lastChild) {
-        event.preventDefault()
-        const lastCaption = captions.lastChild
-        const len  = lastCaption.textContent.length
-        if (len > 0) setCursor(lastCaption, len)
-        lastCaption.focus()
-      }
-    } else {
-      // merge editors
-    }
-  }
-}
-
-const createCaption = _ => {
-  const captionEl = document.createElement('div')
-  captionEl.contentEditable = 'true'
-  captionEl.classList.add('caption')
-  captionEl.addEventListener('keypress', captionEnter)
-  captionEl.addEventListener('keydown', captionDelete)  
-  return captionEl
-}
-
-captionsEl.appendChild(createCaption())
-captions[0] = { start: getVideoEl().currentTime }
-
-const setCursor = (target, position) => { 
-  const range = document.createRange()
-  const selection = window.getSelection()
-  range.setStart(target.childNodes[0], position)
-  range.collapse(true)
-  selection.removeAllRanges()
-  selection.addRange(range)
-  target.focus()
-}
+/**
+ * - Get reference to connected caption component
+ * - Debug
+ * - Show start time and end time
+ * - Add edit timestamp controls
+ * - Merge captions
+ * 
+ */

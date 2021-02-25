@@ -1,0 +1,43 @@
+<template class="caption-template"> 
+  <div class="caption">
+    <div class="start-time">00:00</div>
+    <div class="end-time">00:00</div>
+    <div class="caption-text" contenteditable="true">Hi man</div>
+  </div>
+
+  <script>
+    import { setCursor } from '../utils.js'
+
+    const captionEnter = event => {
+      if (event.key == 'Enter') {
+        if (event.shiftKey) {
+          document.execCommand('insertHTML', false,'<br>')
+        } else {
+          event.preventDefault()
+          const enterEvent = new CustomEvent('caption-enter', { details: { text: event.target.textContent, el: event.target } }) // optional data in event.details
+          document.dispatchEvent(enterEvent)
+        }
+      }
+    }
+
+    const captionDelete = event => {
+      if (event.key == 'Backspace'){
+        if( event.target.textContent == '') {
+          const enterEvent = new CustomEvent('caption-delete', { details: { el: event.target } } }) // optional data in event.details
+        
+          document.dispatchEvent(enterEvent)
+        } 
+      }
+    }
+
+    const containerEl = document.querySelector('caption-element') // *** //
+    const captionEl = containerEl.shadowRoot.querySelector(.caption)
+    captionEl.addEventListener('keypress', captionEnter)
+    captionEl.addEventListener('keydown', captionDelete)  
+
+  </script>
+
+  <style>
+
+  </style>
+</template>
