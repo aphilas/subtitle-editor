@@ -34,7 +34,7 @@ state.captions[firstCaptionEl.dataset.id] = { start: 0, el: firstCaptionEl }
 
 const captionDuration = n => expMap([1 ,60], [1, 5], n)
 
-document.addEventListener('caption-enter', { detail: { text, el } } => {
+document.addEventListener('caption-enter', ({ detail: { text, el }}) => {
   const previous = state.captions[el.dataset.id]
   previous.text = text
   previous.stop = previous.start + captionDuration(text.length)
@@ -46,7 +46,7 @@ document.addEventListener('caption-enter', { detail: { text, el } } => {
   captionEl.querySelector('.caption-text').focus()
 })
 
-document.addEventListener('caption-delete', { detail: { el } } => {
+document.addEventListener('caption-delete', ({ detail: { el } }) => {
   const prev = state.captions[el.dataset.id].prev
   delete state.captions[el.dataset.id]
   el.remove()
@@ -60,8 +60,8 @@ document.addEventListener('caption-delete', { detail: { el } } => {
 })
 
 /**
- * - Get reference to connected caption component
- * - Debug
+ * - Get reference to connected caption component - ?
+ * - Debug - ✔️ 
  * - Show start time and end time
  * - Add edit timestamp controls
  * - Merge captions

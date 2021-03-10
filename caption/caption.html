@@ -23,9 +23,9 @@
     const captionDelete = event => {
       if (event.key == 'Backspace'){
         if( event.target.textContent == '') {
-          const enterEvent = new CustomEvent('caption-delete', { details: { el: event.target } } }) // optional data in event.details
+          const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target } } }) // optional data in event.details
         
-          document.dispatchEvent(enterEvent)
+          document.dispatchEvent(deleteEvent)
         } 
       }
     }
@@ -38,6 +38,16 @@
   </script>
 
   <style>
+    /* caption */
+
+    .caption {
+      width:30em;
+      height: 2.4em;
+      padding: .5em;
+      overflow-wrap: break-word;
+      line-height: 1.2em;
+      overflow-y: scroll;
+    }
 
   </style>
 </template>
