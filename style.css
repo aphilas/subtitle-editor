@@ -22,9 +22,5 @@ video-player {
 }
 
 caption-element {
-  display: block;
   border: 1px solid red;
-  width:30em;
-  height: 2.4em;
-  padding: .5em;
 }
