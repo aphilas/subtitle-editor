@@ -6,13 +6,15 @@
   </div>
 
   <script>
-    import { setCursor } from '../utils.js'
-
-    const containerEl = document.querySelector('caption-element')
-    const shadowRoot = containerEl.shadowRoot
-
-    const sel = query => shadowRoot.querySelector(query)
-    const selAll = query => shadowRoot.querySelectorAll(query)
+    const setCursor = (target, position) => { 
+      const range = document.createRange()
+      const selection = window.getSelection()
+      range.setStart(target.childNodes[0], position)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+      target.focus()
+    }
 
     const captionEnter = event => {
       if (event.key == 'Enter') {
@@ -20,7 +22,7 @@
           document.execCommand('insertHTML', false,'<br>')
         } else {
           event.preventDefault()
-          const enterEvent = new CustomEvent('caption-enter', { details: { text: event.target.textContent, el: event.target } }) // optional data in event.details
+          const enterEvent = new CustomEvent('caption-enter', { detail: { text: event.target.textContent, el: event.target.parentNode }}) // optional data in event.details
           document.dispatchEvent(enterEvent)
         }
       }
@@ -30,17 +32,10 @@
       if (event.key == 'Backspace'){
         if( event.target.textContent == '') {
           const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target }}) // optional data in event.details
-      
           document.dispatchEvent(deleteEvent)
         } 
       }
     }
-
-    const containerEl = document.querySelector('caption-element') // *** //
-    const captionEl = containerEl.shadowRoot.querySelector('.caption')
-    captionEl.addEventListener('keypress', captionEnter)
-    captionEl.addEventListener('keydown', captionDelete)  
-
   </script>
 
   <style>

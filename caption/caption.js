@@ -14,7 +14,10 @@ class CaptionElement extends HTMLElement {
     const fragment = document.createRange().createContextualFragment(text)
     const node = fragment.firstChild.content.cloneNode(true)
     this.shadowRoot.appendChild(node)
-    // this.captionEl = this.shadowRoot.querySelector('.caption')
+
+    this.captionEl = this.shadowRoot.querySelector('.caption-container')
+    this.captionEl.addEventListener('keypress', captionEnter)
+    this.captionEl.addEventListener('keydown', captionDelete)  
   }
 }
 
