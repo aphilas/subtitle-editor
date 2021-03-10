@@ -1,5 +1,5 @@
-<template class="caption-template"> 
-  <div class="caption">
+<template> 
+  <div class="caption-container">
     <div class="start-time">00:00</div>
     <div class="end-time">00:00</div>
     <div class="caption-text" contenteditable="true">Hi man</div>
@@ -7,6 +7,12 @@
 
   <script>
     import { setCursor } from '../utils.js'
+
+    const containerEl = document.querySelector('caption-element')
+    const shadowRoot = containerEl.shadowRoot
+
+    const sel = query => shadowRoot.querySelector(query)
+    const selAll = query => shadowRoot.querySelectorAll(query)
 
     const captionEnter = event => {
       if (event.key == 'Enter') {
@@ -23,15 +29,15 @@
     const captionDelete = event => {
       if (event.key == 'Backspace'){
         if( event.target.textContent == '') {
-          const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target } } }) // optional data in event.details
-        
+          const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target }}) // optional data in event.details
+      
           document.dispatchEvent(deleteEvent)
         } 
       }
     }
 
     const containerEl = document.querySelector('caption-element') // *** //
-    const captionEl = containerEl.shadowRoot.querySelector(.caption)
+    const captionEl = containerEl.shadowRoot.querySelector('.caption')
     captionEl.addEventListener('keypress', captionEnter)
     captionEl.addEventListener('keydown', captionDelete)  
 
@@ -40,7 +46,15 @@
   <style>
     /* caption */
 
-    .caption {
+    :host {
+      display: block;
+    }
+
+    :host([hidden]) {
+      display: none;
+    }
+
+    .caption-container {
       width:30em;
       height: 2.4em;
       padding: .5em;
@@ -48,6 +62,5 @@
       line-height: 1.2em;
       overflow-y: scroll;
     }
-
   </style>
 </template>
