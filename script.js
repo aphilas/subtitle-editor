@@ -1,4 +1,4 @@
-import { expMap } from '../utils.js'
+import { expMap, setCursor } from '../utils.js'
 import VideoPlayer from '../video-player/video-player.js'
 import CaptionElement from '../caption/caption.js'
 
@@ -32,7 +32,7 @@ const captionsContainerEl = document.querySelector('.captions-container')
 /** initial caption */
 
 const firstCaptionEl = document.createElement('caption-element')
-captionsContainerEl.dataset.id = state.currentId++;
+firstCaptionEl.dataset.id = state.currentId++;
 captionsContainerEl.appendChild(firstCaptionEl)
 
 state.captions[firstCaptionEl.dataset.id] = { start: 0, el: firstCaptionEl }
@@ -47,30 +47,37 @@ document.addEventListener('caption-enter', ({ detail: { text, el }}) => {
   previous.stop = previous.start + captionDuration(text.length)
 
   const captionEl = document.createElement('caption-element')
-  captionEl.dataset.id = state.currentId++;
+  captionEl.dataset.id = state.currentId++
   captionsContainerEl.appendChild(captionEl)
   state.captions[captionEl.dataset.id] = { start: getVideoEl().currentTime, el: captionEl, prev: previous.el }
-  captionEl.querySelector('.caption-text').focus()
+
+  // flaky
+  captionEl.shadowRoot.querySelector('.caption-text').focus()
 })
 
 document.addEventListener('caption-delete', ({ detail: { el } }) => {
+  // do not delete first caption
+  if (Object.keys(state.captions).length <= 1) return
+
   const prev = state.captions[el.dataset.id].prev
   delete state.captions[el.dataset.id]
   el.remove()
 
   if (prev) {
     const len = state.captions[prev.dataset.id].text.length
-    const previousCaptionTextEl = prev.querySelector('.caption-text')
-    if (len > 0) setCursor(previousCaptionTextEl, len)
+    const previousCaptionTextEl = prev.shadowRoot.querySelector('.caption-text')
+
+    if (len >= 0) setCursor(previousCaptionTextEl, len)
     previousCaptionTextEl.focus()
   }
 })
 
 /**
- * - Get reference to connected caption component - ?
- * - Debug - ✔️ 
+ * - Fix focus on Enter bug
+ * - Fix setCursor bug
  * - Show start time and end time
  * - Add edit timestamp controls
  * - Merge captions
+ * - Refactor video component
  * 
  */

@@ -6,7 +6,9 @@ const captionEnter = event => {
       document.execCommand('insertHTML', false,'<br>')
     } else {
       event.preventDefault()
-      const enterEvent = new CustomEvent('caption-enter', { detail: { text: event.target.textContent, el: event.target.parentNode }}) // optional data in event.details
+
+      // el → <caption-element>
+      const enterEvent = new CustomEvent('caption-enter', { detail: { text: event.target.textContent, el: event.target.getRootNode().host }}) 
       document.dispatchEvent(enterEvent)
     }
   }
@@ -15,7 +17,9 @@ const captionEnter = event => {
 const captionDelete = event => {
   if (event.key == 'Backspace'){
     if( event.target.textContent == '') {
-      const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target }}) // optional data in event.details
+      
+      // el → <caption-element>
+      const deleteEvent = new CustomEvent('caption-delete', { detail: { el: event.target.getRootNode().host }})
       document.dispatchEvent(deleteEvent)
     } 
   }
