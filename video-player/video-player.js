@@ -38,6 +38,37 @@ const mediaControls = (media, { minSpeed = 0.25, maxSpeed = 5, clipDuration = 30
 // duration
 const secondsToString = sec => new Date(sec * 1000).toISOString().substr(11, 8) // SO
 
+const volumeState = {}
+
+// mute functionality (remember volume)
+const toggleMute = videoEl => _ => {
+  const volume = videoEl.volume
+
+  if (volume == 0) { // unmute
+    videoEl.volume = volumeState.volume // restore volume
+    videoEl.dispatchEvent(new Event('volumechange'))
+  } else { // mute
+    volumeState.volume = volume // save current volume
+    videoEl.volume = 0
+    videoEl.dispatchEvent(new Event('volumechange'))
+  }
+}
+
+// volume functionality
+const handleVolumeSlider = videoEl => ({ target }) => {
+  videoEl.volume = target.value / 100
+  if (target.value == 0) volumeState.volume = 1
+}
+
+const handleVolumeChange = (videoEl, muteEl) => ({ target }) => {
+  muteEl.textContent = videoEl.volume == 0 ? 'U' : 'M' // update icons
+
+  if ((target.value / 100) != videoEl.volume) {
+    target.value = videoEl.volume * 100
+    target.dispatchEvent(new Event('input'))
+  }
+}
+
 class VideoPlayer extends HTMLElement {
   constructor() {
     super()
@@ -59,6 +90,7 @@ class VideoPlayer extends HTMLElement {
     this.videoEl.appendChild(sourceEl)
 
     // event listeners
+    this.attachListeners()
   }
 
   static get observedAttributes() {
@@ -80,10 +112,28 @@ class VideoPlayer extends HTMLElement {
   attachListeners() {
     const sel = query => this.shadowRoot.querySelector(query)
     const selAll = query => this.shadowRoot.querySelectorAll(query)
-
     const videoEl = sel('.video')
     const ctrls = mediaControls(videoEl)
 
+    // play clip
+    sel('.play-clip').addEventListener('click', ctrls.playClip)
+
+    // play/pause
+    const playEl = sel('.play-pause')
+    playEl.addEventListener('click', ctrls.playPause)
+    videoEl.addEventListener('click', ctrls.playPause)
+    videoEl.addEventListener('play', _ => playEl.textContent = 'S')
+    videoEl.addEventListener('pause', _ => playEl.textContent = 'P')
+
+    // skip
+    sel('.skip-back').addEventListener('click', _ => ctrls.skip(-3))
+    sel('.skip-forward').addEventListener('click', _ => ctrls.skip(3))
+
+    // speed
+    sel('.speed-up').addEventListener('click', _ => ctrls.speed(0.5))
+    sel('.slow-down').addEventListener('click', _ => ctrls.speed(-0.5))
+
+    // set duration
     videoEl.addEventListener('durationchange', _ => {
       const seconds = parseFloat(videoEl.duration).toFixed()
       sel('.duration').textContent = secondsToString(seconds) // set duration
@@ -105,56 +155,22 @@ class VideoPlayer extends HTMLElement {
       progressEl.style.setProperty('--track-bg-size', `${progressEl.value}%`)
     })
 
+    // mute
     const muteEl = sel('.mute')
-
-    muteEl.addEventListener('click', toggleMute)
+    muteEl.addEventListener('click', toggleMute(videoEl))
 
     // volume
-    volumeSlider.addEventListener('input', _ => {
-      videoEl.volume = volumeSlider.value / 100
-      if (volumeSlider.value == 0) volumeState.volume = 1
-    })
-
-    videoEl.addEventListener('volumechange', _ => {
-      muteEl.textContent = videoEl.volume == 0 ? 'U' : 'M' // update icons
-
-      if ((volumeSlider.value / 100) != videoEl.volume) {
-        volumeSlider.value = videoEl.volume * 100
-        volumeSlider.dispatchEvent(new Event('input'))
-      }
-    })
-
-    // mute
-    const volumeState = {}
     const volumeSlider = sel('.volume-slider')
-
-    const toggleMute = _ => {
-      const volume = videoEl.volume
-
-      if (volume == 0) { // unmute
-        videoEl.volume = volumeState.volume // restore volume
-        videoEl.dispatchEvent(new Event('volumechange'))
-      } else { // mute
-        volumeState.volume = volume // save current volume
-        videoEl.volume = 0
-        videoEl.dispatchEvent(new Event('volumechange'))
-      }
-    }
+    volumeSlider.addEventListener('input', handleVolumeSlider(videoEl))
+    videoEl.addEventListener('volumechange', handleVolumeChange(videoEl, muteEl))
 
     // functionality for fancy sliders
-    const sliders = (_ => {
-      selAll('input[type=range]').forEach(input => {
-        input.style.setProperty('--track-bg-size', `${input.value}%`)
-        input.addEventListener('input', ({ target }) => {
-          target.style.setProperty('--track-bg-size', `${target.value}%`) // min 0, max 100
-        })
-      })
-    })()
-
-    videoEl.addEventListener('loadedmetadata', event => {
-      sel('.controls').style.display = 'block'
+    selAll('input[type=range]').forEach(input => {
+      input.style.setProperty('--track-bg-size', `${input.value}%`)
+      input.addEventListener('input', ({ target }) => target.style.setProperty('--track-bg-size', `${target.value}%`)) // 0, 100
     })
 
+    videoEl.addEventListener('loadedmetadata', _ => sel('.controls').style.display = 'block')
   }
 }
 
