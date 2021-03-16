@@ -1,4 +1,11 @@
 import { expMap } from '../utils.js'
+import VideoPlayer from '../video-player/video-player.js'
+import CaptionElement from '../caption/caption.js'
+
+/* custom elements */
+
+customElements.define('video-player', VideoPlayer)
+customElements.define('caption-element', CaptionElement)
 
 /** video upload  */
 
@@ -25,7 +32,7 @@ const captionsContainerEl = document.querySelector('.captions-container')
 /** initial caption */
 
 const firstCaptionEl = document.createElement('caption-element')
-firstCaptionEl.dataset.id = state.currentId++;
+captionsContainerEl.dataset.id = state.currentId++;
 captionsContainerEl.appendChild(firstCaptionEl)
 
 state.captions[firstCaptionEl.dataset.id] = { start: 0, el: firstCaptionEl }

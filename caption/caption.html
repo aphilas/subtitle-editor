@@ -1,42 +1,11 @@
 <template> 
   <div class="caption-container">
-    <div class="start-time">00:00</div>
-    <div class="end-time">00:00</div>
-    <div class="caption-text" contenteditable="true">Hi man</div>
+    <div class="caption-timing">
+      <div class="start-time">00:00</div>
+      <div class="end-time">00:00</div>
+    </div>
+    <div class="caption-text" contenteditable="true"></div>
   </div>
-
-  <script>
-    const setCursor = (target, position) => { 
-      const range = document.createRange()
-      const selection = window.getSelection()
-      range.setStart(target.childNodes[0], position)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-      target.focus()
-    }
-
-    const captionEnter = event => {
-      if (event.key == 'Enter') {
-        if (event.shiftKey) {
-          document.execCommand('insertHTML', false,'<br>')
-        } else {
-          event.preventDefault()
-          const enterEvent = new CustomEvent('caption-enter', { detail: { text: event.target.textContent, el: event.target.parentNode }}) // optional data in event.details
-          document.dispatchEvent(enterEvent)
-        }
-      }
-    }
-
-    const captionDelete = event => {
-      if (event.key == 'Backspace'){
-        if( event.target.textContent == '') {
-          const deleteEvent = new CustomEvent('caption-delete', { details: { el: event.target }}) // optional data in event.details
-          document.dispatchEvent(deleteEvent)
-        } 
-      }
-    }
-  </script>
 
   <style>
     /* caption */
@@ -49,7 +18,7 @@
       display: none;
     }
 
-    .caption-container {
+    .caption-container  {
       display: flex;
     }
 
@@ -64,6 +33,7 @@
       overflow-wrap: break-word;
       line-height: 1.2em;
       overflow-y: scroll;
+      border: 1px solid blue;
     }
   </style>
 </template>
