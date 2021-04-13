@@ -41,6 +41,12 @@ state.captions[firstCaptionEl.dataset.id] = { start: 0, el: firstCaptionEl }
 
 const captionDuration = n => expMap([1 ,60], [1, 5], n)
 
+const captionAttached = event => {
+  event.stopPropagation()
+  event.target.shadowRoot.querySelector('.caption-text').focus()
+  event.target.removeEventListener('caption-attached', captionAttached)
+}
+
 document.addEventListener('caption-enter', ({ detail: { text, el }}) => {
   const previous = state.captions[el.dataset.id]
   previous.text = text
@@ -50,9 +56,7 @@ document.addEventListener('caption-enter', ({ detail: { text, el }}) => {
   captionEl.dataset.id = state.currentId++
   captionsContainerEl.appendChild(captionEl)
   state.captions[captionEl.dataset.id] = { start: getVideoEl().currentTime, el: captionEl, prev: previous.el }
-
-  // flaky
-  captionEl.shadowRoot.querySelector('.caption-text').focus()
+  captionEl.addEventListener('caption-attached', captionAttached)
 })
 
 document.addEventListener('caption-delete', ({ detail: { el } }) => {

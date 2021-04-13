@@ -40,6 +40,9 @@ class CaptionElement extends HTMLElement {
     this.captionEl = this.shadowRoot.querySelector('.caption-container')
     this.captionEl.addEventListener('keypress', captionEnter)
     this.captionEl.addEventListener('keydown', captionDelete)  
+
+    const attachedEvent = new CustomEvent('caption-attached')
+    this.dispatchEvent(attachedEvent)
   }
 }
 
